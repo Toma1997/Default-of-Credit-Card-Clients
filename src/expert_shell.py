@@ -1,5 +1,4 @@
 # A few utilities for dealing with certainty judgments
-
 def cert_or(a, b):
     if a > 0 and b > 0:
         return a + b - a * b
@@ -27,7 +26,6 @@ class Cert(object):
     cutoff = 0.2
 
 # Context (the things we can reason about)
-
 class Ctx(object):
     def __init__(self, name, initial=None, goals=None):
         self.count = 0
@@ -41,7 +39,6 @@ class Ctx(object):
         return inst
 
 # Parameters (the qualities of the context that we're interested in)
-
 class Param(object):
     def __init__(self, name, ctx=None, enum=None, cls=None, ask_first=False):
         self.name = name
@@ -88,9 +85,7 @@ def update_cert(values, param, inst, val, cert):
     updated = cert_or(existing, cert)
     get_vals(values, param, inst)[val] = updated
     
-
 # Rules (how we reason about the context)
-
 class Rule(object):
     def __init__(self, num, premises, conclusions, cert):
         self.num = num
@@ -124,8 +119,7 @@ class Rule(object):
             vals = get_vals(values, param, inst)
             cert = eval_condition(premise, vals)
             if cert_false(cert):
-                return Cert.false
-                        
+                return Cert.false          
         total_cert = Cert.true
         for premise in self.premises(instances):
             param, inst, op, val = premise
@@ -137,32 +131,24 @@ class Rule(object):
         return total_cert
 
     def apply(self, values, instances, discover=None, track=None):
-        
         if track:
             track(self)
-        
         cert = self.cert * self.applicable(values, instances, discover)
         if not cert_true(cert):
             return False
-        
         for conclusion in self.conclusions(instances):
             param, inst, op, val = conclusion
             update_cert(values, param, inst, val, cert)
-        
         return True
 
-
 def use_rules(values, instances, rules, discover=None, track_rules=None):
-    
     return any([rule.apply(values, instances, discover, track_rules) for rule in rules])
 
-
-def write(line): print(line)
+def write(line): 
+    print(line)
 
 # The Expert Shell (how we interact with the rule system)
-
 class Shell(object):
-    
     def __init__(self, read=input, write=write):
         self.read = read
         self.write = write
@@ -175,7 +161,7 @@ class Shell(object):
         self.current_inst = None
         self.instances = {}
         self.current_rule = None
-    
+        
     def clear(self):
         self.given.clear()
         self.asked.clear()
@@ -217,10 +203,8 @@ unknown - ako ne znate odgovor na pitanje
         - više odgovora na pitanje sa pripadajućim faktorima pouzdanosti.\n"""
 
     def ask_values(self, param, inst):
-        
         if (param, inst) in self.asked:
             return
-
         self.asked.add((param, inst))
         while True:
             resp = self.read('%s? ' % (param))
@@ -250,7 +234,6 @@ unknown - ako ne znate odgovor na pitanje
         if self.current_rule in ('initial', 'goal'):
             self.write('%s is one of the %s params.' % (param, self.current_rule))
             return
-
         given, unknown = [], []
         for premise in self.current_rule.premises(self.instances):
             vals = get_vals(self.given_values, premise[0], premise[1])
@@ -258,13 +241,11 @@ unknown - ako ne znate odgovor na pitanje
                 given.append(premise)
             else:
                 unknown.append(premise)
-        
         if given:
             self.write('It is given that:')
             for condition in given:
                 self.write(print_condition(condition))
             self.write('Therefore,')
-        
         rule = self.current_rule.clone()
         rule.raw_premises = unknown
         self.write(rule)
@@ -274,15 +255,10 @@ unknown - ako ne znate odgovor na pitanje
     
     def discover(self, param, inst=None):
         inst = inst or self.current_inst
-
         if (param, inst) in self.given: 
             return True
-        
         def rules():
-            return use_rules(self.given_values, self.instances,
-                             self.get_rules(param), self.discover,
-                             self._set_current_rule)
-
+            return use_rules(self.given_values, self.instances, self.get_rules(param), self.discover, self._set_current_rule)
         if self.get_param(param).ask_first:
             success = self.ask_values(param, inst) or rules()
         else:
@@ -292,27 +268,23 @@ unknown - ako ne znate odgovor na pitanje
         return success
 
     def execute(self, ctx_names):
-        self.write('\nCS 251 - Final Project. Jack Henahan.\nZa pomoć, unesite "help".\n')
+        self.write('\nDefault of Credit Card Clients Project\nFor help type "help".\n')
         self.clear()
         results = {}
         for name in ctx_names:
             ctx = self.ctxs[name]
             self.build(name)
-            
             self._set_current_rule('initial')
             for param in ctx.initial:
                 self.discover(param)
-            
             self._set_current_rule('goal')
             for param in ctx.goals:
                 self.discover(param)
-            
             if ctx.goals:
                 result = {}
                 for param in ctx.goals:
                     result[param] = get_vals(self.given_values, param, self.current_inst)
                 results[self.current_inst] = result
-            
         return results
 
 def parse_reply(param, reply):

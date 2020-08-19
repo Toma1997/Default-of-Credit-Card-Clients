@@ -1,70 +1,54 @@
-""" Određivanje vrste kontaktnih sočiva
-
-    Sistemi za podršku odlučivanju:
-    Primer realizacije ekspertnog sistema u jeziku Python (Python 3)
-    -- na osnovu https://github.com/jhenahan/pycin (Python 2)
-
-"""
-
-# Pomoćne funkcije
-
+# Helper function
 def eq(x, y):
     if x == 'nisam siguran':
         return False
     return x == y
 
+# EXPERT SYSTEM DEFINITION
 
-# DEFINISANJE SISTEMA
-
-# Kontekst odlučivanja
-
+# Decision context
 def define_ctxs(sh):
-    #sh.define_ctx(Ctx('pacijent', ['kako oko suzi', 'astigmatizam','vrsta dioptrije']))
-    sh.define_ctx(Ctx('pacijent', goals=['preporuka']))
+    #sh.define_ctx(Ctx('client', ['sex', 'marriage','education']))
+    sh.define_ctx(Ctx('client', goals=['preporuka']))
 
-
-# Parametri (atributi)
-
+# Parameters (attributes)
 def define_params(sh):
     
-    # Parametri pacijenta
-    sh.define_param(Param('kako oko suzi', 'pacijent', enum=['normalno', 'smanjeno'], ask_first=True))
-    sh.define_param(Param('astigmatizam', 'pacijent', enum=['da', 'ne'], ask_first=True))
-    sh.define_param(Param('vrsta dioptrije', 'pacijent', enum=['kratkovidost', 'dalekovidost'], ask_first=True))
+    # Client parameters
+    sh.define_param(Param('sex', 'client', enum=['male', 'female'], ask_first=True))
+    sh.define_param(Param('marriage', 'client', enum=['married', 'single', 'others'], ask_first=True))
+    sh.define_param(Param('education', 'client', enum=['graduate school', 'university', 'high school', 'others'], ask_first=True))
 
-    # Parametri klasa (odluka) - preporuke sočiva
-    sh.define_param(Param('preporuka', 'pacijent', enum=['meka sočiva', 'tvrda sočiva', 'ne preporučuju se']))
+    # Class paramters (decisios) - default payment next month prediciton 
+    sh.define_param(Param('default_payment_next_month', 'client', enum=['yes', 'no']))
 
-
-# Produkciona pravila
-
+# Production rules
 def define_rules(sh):
-    # Pravila
+    # Rules
     sh.define_rule(Rule(1,
-                        [('kako oko suzi', 'pacijent', eq, 'smanjeno')],
-                        [('preporuka', 'pacijent', eq, 'ne preporučuju se')],
+                        [('sex', 'client', eq, 'male')],
+                        [('default_payment_next_month', 'client', eq, 'yes')],
 			1.0))
     sh.define_rule(Rule(2,
-                        [('astigmatizam', 'pacijent', eq, 'ne')],
-                        [('preporuka', 'pacijent', eq, 'meka sočiva')],
+                        [('marriage', 'client', eq, 'yes')],
+                        [('default_payment_next_month', 'client', eq, 'no')],
 			0.86))
     sh.define_rule(Rule(3,
-                        [('vrsta dioptrije', 'pacijent', eq, 'kratkovidost')],
-                        [('preporuka', 'pacijent', eq, 'tvrda sočiva')],
+                        [('education', 'client', eq, 'university')],
+                        [('default_payment_next_month', 'client', eq, 'no')],
 			1.0))
-    # Default pravilo
+    # Default rule
     sh.define_rule(Rule(4,
                         [],
-                        [('preporuka', 'pacijent', eq, 'ne preporučuju se')],
+                        [('default_payment_next_month', 'client', eq, 'no')],
 			0.75))
     
-# POKRETANJE SISTEMA
-
+# System execution
 from expert_shell import Param, Ctx, Rule, Shell
 
 def report_findings(findings):
     for inst, result in findings.items():
-        print('\nOdluka za %s-%d:' % (inst[0], inst[1]))
+        print('\nDecision for %s-%d:' % (inst[0], inst[1]))
         for param, vals in result.items():
             possibilities = ['%s %f' % (val[0], val[1]) for val in vals.items()]
             print('%s: %s' % (param, ', '.join(possibilities)))
@@ -74,6 +58,6 @@ def main():
     define_ctxs(sh)
     define_params(sh)
     define_rules(sh)
-    report_findings(sh.execute(['pacijent']))
+    report_findings(sh.execute(['client']))
 
 main()
