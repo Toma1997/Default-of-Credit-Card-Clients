@@ -1,47 +1,47 @@
 # Helper function
 def eq(x, y):
-    if x == 'nisam siguran':
+    if x == 'Not sure':
         return False
     return x == y
 
 # EXPERT SYSTEM DEFINITION
 
 # Decision context
-def define_ctxs(sh):
+def define_ctxs(shell):
     #sh.define_ctx(Ctx('client', ['sex', 'marriage','education']))
-    sh.define_ctx(Ctx('client', goals=['preporuka']))
+    shell.define_ctx(Ctx('client', goals=['default_payment_next_month']))
 
 # Parameters (attributes)
-def define_params(sh):
+def define_params(shell):
     
     # Client parameters
-    sh.define_param(Param('sex', 'client', enum=['male', 'female'], ask_first=True))
-    sh.define_param(Param('marriage', 'client', enum=['married', 'single', 'others'], ask_first=True))
-    sh.define_param(Param('education', 'client', enum=['graduate school', 'university', 'high school', 'others'], ask_first=True))
+    shell.define_param(Param('sex', 'client', enum=['male', 'female'], ask_first=True))
+    shell.define_param(Param('marriage', 'client', enum=['married', 'single', 'others'], ask_first=True))
+    shell.define_param(Param('education', 'client', enum=['graduate school', 'university', 'high school', 'others'], ask_first=True))
 
     # Class paramters (decisios) - default payment next month prediciton 
-    sh.define_param(Param('default_payment_next_month', 'client', enum=['yes', 'no']))
+    shell.define_param(Param('default_payment_next_month', 'client', enum=['yes', 'no']))
 
 # Production rules
-def define_rules(sh):
+def define_rules(shell):
     # Rules
-    sh.define_rule(Rule(1,
+    shell.define_rule(Rule(1,
                         [('sex', 'client', eq, 'male')],
                         [('default_payment_next_month', 'client', eq, 'yes')],
-			1.0))
-    sh.define_rule(Rule(2,
+			0.65))
+    shell.define_rule(Rule(2,
                         [('marriage', 'client', eq, 'yes')],
                         [('default_payment_next_month', 'client', eq, 'no')],
-			0.86))
-    sh.define_rule(Rule(3,
-                        [('education', 'client', eq, 'university')],
-                        [('default_payment_next_month', 'client', eq, 'no')],
-			1.0))
+			0.79))
+    shell.define_rule(Rule(3,
+                        [('education', 'client', eq, 'high school')],
+                        [('default_payment_next_month', 'client', eq, 'yes')],
+			0.75))
     # Default rule
-    sh.define_rule(Rule(4,
+    shell.define_rule(Rule(4,
                         [],
                         [('default_payment_next_month', 'client', eq, 'no')],
-			0.75))
+			0.50))
     
 # System execution
 from expert_shell import Param, Ctx, Rule, Shell
@@ -54,10 +54,10 @@ def report_findings(findings):
             print('%s: %s' % (param, ', '.join(possibilities)))
         
 def main():
-    sh = Shell()
-    define_ctxs(sh)
-    define_params(sh)
-    define_rules(sh)
-    report_findings(sh.execute(['client']))
+    shell = Shell()
+    define_ctxs(shell)
+    define_params(shell)
+    define_rules(shell)
+    report_findings(shell.execute(['client']))
 
 main()

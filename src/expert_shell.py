@@ -1,4 +1,4 @@
-# A few utilities for dealing with certainty judgments
+# A few utilities for dealing with certainty judgments.
 def cert_or(a, b):
     if a > 0 and b > 0:
         return a + b - a * b
@@ -55,16 +55,13 @@ class Param(object):
             return self.cls(val)
         if self.enum and val in self.enum:
             return val
-        
-        raise ValueError('val must be one of %s for the param %s' %
-                         (', '.join(list(self.enum)), self.name))
+        raise ValueError('val must be one of %s for the param %s' % (', '.join(list(self.enum)), self.name))
 
 def eval_condition(condition, values, discover=None):
     param, inst, op, val = condition
     if discover:
         discover(param, inst)
     total = sum(cert for given_val, cert in values.items() if op(given_val, val))
-    
     return total
 
 def print_condition(condition):
@@ -100,8 +97,7 @@ class Rule(object):
         return templ % (self.num, '\n\t'.join(prems), self.cert, '\n\t'.join(concls))
     
     def clone(self):
-        return Rule(self.num, list(self.raw_premises),
-                    list(self.raw_conclusions), self.cert)
+        return Rule(self.num, list(self.raw_premises), list(self.raw_conclusions), self.cert)
     
     def _bind_cond(self, cond, instances):
         param, ctx, op, val = cond
@@ -161,7 +157,7 @@ class Shell(object):
         self.current_inst = None
         self.instances = {}
         self.current_rule = None
-        
+
     def clear(self):
         self.given.clear()
         self.asked.clear()
@@ -227,7 +223,7 @@ unknown - ako ne znate odgovor na pitanje
                         update_cert(self.given_values, param, inst, val, cert)
                     return True
                 except:
-                    self.write('  Invalid response. Type ? to see legal ones.')
+                    self.write('Invalid response. Type ? to see legal ones.')
     
     def print_why(self, param):
         self.write('Why is the value of %s being asked for?' % param)
